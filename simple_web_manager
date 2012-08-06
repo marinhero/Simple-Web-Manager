@@ -1,0 +1,112 @@
+#!/bin/bash
+
+##########################################################
+#                                                        #
+#                SIMPLE WEB MANAGER                      #
+#                                                        #
+#                BY: Marin Alcaraz                       #
+#                 V:1.0  LU:01/08/12                     #
+#                                                        #
+#   Simple web manager provides an easy way to           #
+#   manage apache2 virtual hosts, manage users           #
+#   and databases on archlinux.                          #
+#   Apache virtual host must be enabled.                 #
+#                                                        #
+#    The content of this file is licensed under          #
+#    the MIT license.                                    #
+#                                                        #
+##########################################################
+
+
+#General Info
+
+VERSION="Version 1"
+INFO="Simple Web Manager $VERSION "
+BASE_PATH="/home"
+VHOST_PATH="/etc/httpd/conf/extra/httpd-vhosts.conf"
+MYSQL=`which mysql`
+
+echo -e "$INFO \n"
+
+#Menu
+PS3='Please Select an option '
+
+options=("Add Account" "Delete Account" "Create Database" "Create Database_User" "Manage DB_user permissons" "Quit")
+select opt in "${options[@]}"
+   
+do
+        case $opt in
+            "Add Account")
+                #Request account name and creates it
+                
+                read -p "Give an account: " ACCOUNT
+                adduser $ACCOUNT
+                cut -d: -f1 /etc/passwd | grep "$ACCOUNT" > /dev/null
+                ST=$?
+                if [ $ST -eq 0 ]
+                then
+                    mkdir -p $BASE_PATH/$ACCOUNT/{public_html,private,logs,cgi-bin,backup} 
+                    chmod -R 755 $BASE_PATH/$ACCOUNT
+                    read -p "Give a domain: " DOMAIN
+                    
+                    VHOST_DEFINITION="
+                                <VirtualHost *:80>
+                                    \n  ServerAdmin dontbother@me.com
+                                    \n DocumentRoot /home/$ACCOUNT/public_html
+                                    \n ServerName $DOMAIN
+                                    \n ServerAlias www.$DOMAIN
+                                    \n ErrorLog /home/$ACCOUNT/logs/$DOMAIN-error_log
+                               \n </VirtualHost>"
+
+                    echo -e $VHOST_DEFINITION >> $VHOST_PATH
+                    rc.d restart httpd
+                    echo -e "ACCOUNT $ACCOUNT SUCCESFULLY CREATED \n"
+                else
+                 echo "hi"    
+                fi
+                
+                ;;
+
+            "Delete Account")
+                read -p "Give an account: " ACCOUNT
+                read -p "Are you sure?? (1,0) You are attempting to delete  $BASE_PATH/$ACCOUNT/  and all it's content" CONF
+                if [ $CONF -eq 1 ]
+                then
+                    userdel $ACCOUNT
+                    rm -rf $BASE_PATH/$ACCOUNT/
+                    echo "Account Succesfully Deleted"
+                else
+                    echo "There was an errorer deleting the account: $ACCOUNT"
+                fi
+                ;;
+
+             "Create Database")
+                read -p "Database name: " DBNAME
+                echo "Create Database"
+                    QUERY1="CREATE DATABASE IF NOT EXISTS $DBNAME"
+                    $MYSQL -u root -p -e "$QUERY1"
+                ;;
+
+            "Create Database_User")
+                echo "Create Database_User"
+                read -p "Database user name: " DBUSER
+                    QUERY2="CREATE USER $DBUSER"
+                    $MYSQL -u root -p -e "$QUERY2"
+                ;;
+
+            "Manage DB_user permissons")
+                echo "Manage DB_user permissons"
+                read -p "User name: " DBUSER
+                read -p "Set mysql pass: " MSPASS
+                read -p "Database: " MSDB
+
+                QUERY3="GRANT ALL ON $MSDB.* TO '$DBUSER'@'localhost' IDENTIFIED BY '$MSPASS'; FLUSH PRIVILEGES;"
+                $MYSQL -u root -p -e "$QUERY3"
+                ;;
+
+            "Quit")
+                break
+                ;;
+            *) echo "invalid option";;
+        esac
+done
