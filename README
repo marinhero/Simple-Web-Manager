@@ -1,0 +1,21 @@
+Simple Web Manager.
+Version: 1.0.
+Author: Marin Alcaraz.
+
+
+Simple Web Manager is an easy and basic tool to manage Archlinux (rackspace cloud) Webservers.
+
+SWM can perform:
+
+1.-Add Website.
+2.-Delete Website.
+3.-Create Database.
+4.-Create Database_user.
+5.-Manage database_user permissions.
+
+Instructions:
+
+1.-Upload the SWM file to your server. (You should check the file path inside the file and verify it matches with your server)
+2.-Grant executions permissions to the file.
+3.-Run the file.
+4.-Enjoy.
