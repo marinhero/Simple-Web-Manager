@@ -48,7 +48,7 @@ do
                     mkdir -p $BASE_PATH/$ACCOUNT/{public_html,private,logs,cgi-bin,backup} 
                     chmod -R 755 $BASE_PATH/$ACCOUNT
                     chown -R $ACCOUNT $BASE_PATH/$ACCOUNT 
-                    chgrp -R $ACCOUNT $BASE_PATH/$ACCOUNT 
+                    chgrp -R web $BASE_PATH/$ACCOUNT 
                     read -p "Give a domain: " DOMAIN
                     
                     VHOST_DEFINITION="
