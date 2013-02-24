@@ -1,15 +1,14 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 ##########################################################
 #                                                        #
 #                SIMPLE WEB MANAGER                      #
 #                                                        #
 #                BY: Marin Alcaraz                       #
-#                 V:1.0  LU:01/08/12                     #
+#                 V:1.1  LU:13/02/13                     #
 #                                                        #
 #   Simple web manager provides an easy way to           #
 #   manage apache2 virtual hosts, manage users           #
-#   and databases on archlinux.                          #
+#   and databases on Ubuntu.                             #
 #   Apache virtual host must be enabled.                 #
 #                                                        #
 #    The content of this file is licensed under          #
@@ -20,53 +19,56 @@
 
 #General Info
 
-VERSION="Version 1"
+VERSION="Version 1.1"
 INFO="Simple Web Manager $VERSION "
 BASE_PATH="/home"
-VHOST_PATH="/etc/httpd/conf/extra/httpd-vhosts.conf"
+VHOST_PATH="/etc/apache2/sites-available"
 MYSQL=`which mysql`
 
-echo -e "$INFO \n"
+echo "$INFO"
+
+#Group validation
+/bin/egrep  -i "^web" /etc/group
+if [ $? -eq 0 ];
+then
+    echo "Group verified..."
+else
+    echo "group web does not exists in /etc/passwd you MUST create it"
+    exit
+fi
 
 #Menu
-PS3='Please Select an option '
+echo "Please Select an option"
 
 options=("Add Account" "Delete Account" "Create Database" "Create Database_User" "Manage DB_user permissons" "Quit")
 select opt in "${options[@]}"
-   
+
 do
         case $opt in
             "Add Account")
                 #Request account name and creates it
-                
+
                 read -p "Give an account: " ACCOUNT
                 adduser $ACCOUNT
-                cut -d: -f1 /etc/passwd | grep "$ACCOUNT" > /dev/null
-                ST=$?
-                if [ $ST -eq 0 ]
-                then
-                    mkdir -p $BASE_PATH/$ACCOUNT/{public_html,private,logs,cgi-bin,backup} 
+                    mkdir -p $BASE_PATH/$ACCOUNT/{public_html,private,logs,cgi-bin,backup}
                     chmod -R 755 $BASE_PATH/$ACCOUNT
-                    chown -R $ACCOUNT $BASE_PATH/$ACCOUNT 
-                    chgrp -R web $BASE_PATH/$ACCOUNT 
+                    chown -R $ACCOUNT $BASE_PATH/$ACCOUNT
+                    chgrp -R web $BASE_PATH/$ACCOUNT
                     read -p "Give a domain: " DOMAIN
-                    
+
                     VHOST_DEFINITION="
                                 <VirtualHost *:80>
-                                    \n  ServerAdmin dontbother@me.com
+                                    \n ServerAdmin admin@site.com
                                     \n DocumentRoot /home/$ACCOUNT/public_html
                                     \n ServerName $DOMAIN
                                     \n ServerAlias www.$DOMAIN
                                     \n ErrorLog /home/$ACCOUNT/logs/$DOMAIN-error_log
                                \n </VirtualHost>"
-
-                    echo -e $VHOST_DEFINITION >> $VHOST_PATH
-                    rc.d restart httpd
+                    touch $VHOST_PATH/$DOMAIN
+                    echo -e $VHOST_DEFINITION >> $VHOST_PATH/$DOMAIN
+                    a2ensite $DOMAIN
+                    service apache2 restart
                     echo -e "ACCOUNT $ACCOUNT SUCCESFULLY CREATED \n"
-                else
-                 echo "hi"    
-                fi
-                
                 ;;
 
             "Delete Account")
@@ -76,7 +78,10 @@ do
                 then
                     userdel $ACCOUNT
                     rm -rf $BASE_PATH/$ACCOUNT/
+                    rm -rf $VHOST_PATH/$ACCOUNT/
                     echo "Account Succesfully Deleted"
+                    a2dissite $DOMAIN
+                    service apache2 restart
                 else
                     echo "There was an errorer deleting the account: $ACCOUNT"
                 fi
