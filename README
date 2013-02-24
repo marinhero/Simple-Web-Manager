@@ -1,9 +1,9 @@
 Simple Web Manager.
-Version: 1.0.
+Version: 1.1.
 Author: Marin Alcaraz.
 
 
-Simple Web Manager is an easy and basic tool to manage Archlinux (rackspace cloud) Webservers.
+Simple Web Manager is an easy and basic tool to manage Ubuntu (rackspace cloud) Webservers.
 
 SWM can perform:
 
