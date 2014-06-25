@@ -64,9 +64,10 @@ do
                                     \n ServerAlias www.$DOMAIN
                                     \n ErrorLog /home/$ACCOUNT/logs/$DOMAIN-error_log
                                \n </VirtualHost>"
-                    touch $VHOST_PATH/$DOMAIN
-                    echo -e $VHOST_DEFINITION >> $VHOST_PATH/$DOMAIN
-                    a2ensite $DOMAIN
+                    FILE_NAME=`echo $DOMAIN| cut -d'.' -f 1`
+                    touch $VHOST_PATH/$FILE_NAME
+                    echo -e $VHOST_DEFINITION >> $VHOST_PATH/$FILE_NAME
+                    a2ensite $FILE_NAME
                     service apache2 restart
                     echo -e "ACCOUNT $ACCOUNT SUCCESFULLY CREATED \n"
                 ;;
